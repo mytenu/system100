@@ -1,0 +1,48 @@
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+import streamlit as st
+import json
+
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+
+creds_dict = st.secrets["gcp_service_account"]
+CREDS = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+CLIENT = gspread.authorize(CREDS)
+SHEET = CLIENT.open("users101").sheet1
+
+st.title("Araba Unisex Boutique")
+
+tab1, tab2 =st.tabs(["Login", "Register"])
+with tab1:
+    with st.form("Login"):
+        users = SHEET.get_all_records()
+        username = st.text_input("Enter Username").strip().lower()
+        password = st.text_input("Enter password", type="password").strip() # mask password input
+        if st.form_submit_button("Login"):
+            found = False
+            for user in users:
+            	#sheet_username = str(user["username"]).strip().lower()
+            	#print("username", sheet_username)
+            	#sheet_password = str(user["password"]).strip()
+            	if str(user["username"]) == username and str(user["password"]) == password:
+                    found = True  # ✅ assignment, not comparison
+                    st.success(f"Welcome, {username}!")
+                    break  # ✅ stop checking once a match is found
+
+            # ✅ only runs after loop is done
+            if not found:
+                st.error("Invalid username or password")
+	
+with tab2:
+	with st.form("Register"):
+		users=SHEET.get_all_records()
+		username100=st.text_input("Enter a username")
+		password100=st.text_input("Enter a password")
+		email100=st.text_input("Enter your email")
+		first100=st.text_input("Enter first name")
+		last100=st.text_input("Enter last name")
+		Dob100=st.text_input("Enter DoB")
+		contact100=st.text_input("Enter Contact")
+		if st.form_submit_button("Register"):
+			SHEET.append_row([first100, last100, Dob100, contact100,email100, password100, username100])
+			st.success("Registration Successful")
