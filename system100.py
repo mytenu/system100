@@ -27,22 +27,23 @@ with tab1:
     with st.form("Login"):
         users = SHEET.get_all_records()
         username = st.text_input("Enter Username").strip().lower()
-        password = st.text_input("Enter password", type="password").strip()
-        
+        password = st.text_input("Enter password", type="password").strip() # mask password input
         if st.form_submit_button("Login"):
-            if not username or not password:
-                st.error("Please enter both username and password")
-            else:
-                found = False
-                for user in users:
-                    if str(user.get("username", "")).strip().lower() == username and str(user.get("password", "")).strip() == password:
-                        found = True
-                        st.success(f"Welcome, {username}!")
-                        break
-                
-                if not found:
-                    st.error("Invalid username or password")
-
+        	
+        	if username.lower() == "admin" and password == "korsah2024":
+        		st.success("Admin Access Granted")
+        		st.subheader("All User Information")
+        		df=pd.DataFrame(users)
+        		st.dataframe(df)
+        	else:
+        		found = False
+        		for user in users:
+        			if str(user["username"]) == username and str(user["password"]) == password:
+        				found = True  # ✅ assignment, not comparison
+        				st.success(f"Welcome, {username}!")
+        				break  # ✅ stop checking once a match is found
+        		if not found:
+        			st.error("Invalid username or password")
 with tab2:
     with st.form("Register"):
         username100 = st.text_input("Enter a username")
