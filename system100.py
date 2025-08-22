@@ -1,15 +1,55 @@
 import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
+import sys
+import subprocess
 
-# Define scope
+# Debug: Check if packages are available
+st.title("Debug: Secrets and Packages")
+
+try:
+    import gspread
+    st.success("✅ gspread imported successfully")
+    st.write(f"gspread version: {gspread.__version__}")
+except ImportError as e:
+    st.error(f"❌ gspread import failed: {e}")
+    st.stop()
+
+try:
+    from google.oauth2.service_account import Credentials
+    st.success("✅ google.oauth2.service_account imported successfully")
+except ImportError as e:
+    st.error(f"❌ google.oauth2.service_account import failed: {e}")
+    st.stop()
+
+# Debug: Check secrets
+st.write("### Secrets Debug:")
+st.write("Available secrets keys:", list(st.secrets.keys()) if hasattr(st, 'secrets') else "No secrets object")
+
+if "gcp_service_account" in st.secrets:
+    st.success("✅ gcp_service_account found in secrets")
+    st.write("Keys in gcp_service_account:", list(st.secrets["gcp_service_account"].keys()))
+else:
+    st.error("❌ gcp_service_account NOT found in secrets")
+    st.write("All available secret keys:", list(st.secrets.keys()) if hasattr(st, 'secrets') and st.secrets else "None")
+    
+    # Show what secrets are actually available
+    try:
+        st.write("### All secrets structure:")
+        for key in st.secrets.keys():
+            st.write(f"- {key}: {type(st.secrets[key])}")
+    except Exception as e:
+        st.write(f"Error accessing secrets: {e}")
+    
+    st.stop()
+
+# If we get here, secrets are working
+st.success("🎉 All imports and secrets successful! Loading main app...")
+
+# Your actual app code here
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-# Load credentials from Streamlit secrets
 @st.cache_resource
 def init_connection():
     try:
-        # Create credentials from Streamlit secrets
         credentials = Credentials.from_service_account_info(
             st.secrets["gcp_service_account"],
             scopes=SCOPE
@@ -20,7 +60,6 @@ def init_connection():
         st.error(f"Error connecting to Google Sheets: {e}")
         return None
 
-# Initialize connection
 CLIENT = init_connection()
 
 if CLIENT is None:
@@ -29,10 +68,10 @@ if CLIENT is None:
 
 try:
     SHEET = CLIENT.open("users101").sheet1
+    st.success("✅ Connected to Google Sheets successfully")
 except Exception as e:
     st.error(f"Error opening spreadsheet: {e}")
     st.stop()
-
 
 st.title("Araba Unisex Boutique")
 
