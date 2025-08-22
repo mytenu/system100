@@ -1,17 +1,37 @@
-from google.oauth2.service_account import Credentials
-import gspread
 import streamlit as st
-import json
+import gspread
+from google.oauth2.service_account import Credentials
 
-SCOPE = ["https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive"]
+# Define scope
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 # Load credentials from Streamlit secrets
-creds_dict = st.secrets["gcp_service_account"]
-creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
+@st.cache_resource
+def init_connection():
+    try:
+        # Create credentials from Streamlit secrets
+        credentials = Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"],
+            scopes=SCOPE
+        )
+        client = gspread.authorize(credentials)
+        return client
+    except Exception as e:
+        st.error(f"Error connecting to Google Sheets: {e}")
+        return None
 
-CLIENT = gspread.authorize(creds)
-SHEET = CLIENT.open("users101").sheet1
+# Initialize connection
+CLIENT = init_connection()
+
+if CLIENT is None:
+    st.error("Failed to connect to Google Sheets. Please check your secrets configuration.")
+    st.stop()
+
+try:
+    SHEET = CLIENT.open("users101").sheet1
+except Exception as e:
+    st.error(f"Error opening spreadsheet: {e}")
+    st.stop()
 
 
 st.title("Araba Unisex Boutique")
